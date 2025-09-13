@@ -95,20 +95,18 @@ vim.g.have_nerd_font = false
 
 -- [[ Setting options ]]
 -- See `:help vim.o`
--- NOTE: You can change these options as you wish!
 --  For more options, you can see `:help option-list`
 
--- Make line numbers default
-vim.o.number = true
--- You can also add relative line numbers, to help with jumping.
---  Experiment for yourself to see if you like it!
--- vim.o.relativenumber = true
+-- Terminal colors
+vim.o.tgc = true
+
+-- Show relative line numbers and highlight the line the cursor is on
+vim.o.relativenumber = true
+vim.o.cursorline = true
 
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.o.mouse = 'a'
-
--- Don't show the mode, since it's already in the status line
-vim.o.showmode = false
+vim.o.guicursor = 'n-v-c-i:block'
 
 -- Sync clipboard between OS and Neovim.
 --  Schedule the setting after `UiEnter` because it can increase startup-time.
@@ -129,13 +127,13 @@ vim.o.ignorecase = true
 vim.o.smartcase = true
 
 -- Keep signcolumn on by default
-vim.o.signcolumn = 'yes'
+--vim.o.signcolumn = 'yes'
 
 -- Decrease update time
 vim.o.updatetime = 250
 
 -- Decrease mapped sequence wait time
-vim.o.timeoutlen = 300
+--vim.o.timeoutlen = 300
 
 -- Configure how new splits should be opened
 vim.o.splitright = true
@@ -150,60 +148,44 @@ vim.o.splitbelow = true
 --   See `:help lua-options`
 --   and `:help lua-options-guide`
 vim.o.list = true
-vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
+vim.opt.listchars = { tab = '⇥ ', space = '·' }
 
 -- Preview substitutions live, as you type!
 vim.o.inccommand = 'split'
-
--- Show which line your cursor is on
-vim.o.cursorline = true
-
--- Minimal number of screen lines to keep above and below the cursor.
-vim.o.scrolloff = 10
 
 -- if performing an operation that would fail due to unsaved changes in the buffer (like `:q`),
 -- instead raise a dialog asking if you wish to save the current file(s)
 -- See `:help 'confirm'`
 vim.o.confirm = true
 
+-- [[ File types ]]
+
+vim.filetype.add {
+  extension = {
+    cppm = 'cpp', -- C++20 module
+    gltf = 'json', -- glTF
+  },
+}
+
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
-
--- Clear highlights on search when pressing <Esc> in normal mode
---  See `:help hlsearch`
-vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
--- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
--- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
--- is not what someone will guess without a bit more experience.
---
--- NOTE: This won't work in all terminal emulators/tmux/etc. Try your own mapping
--- or just use <C-\><C-n> to exit terminal mode
-vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
+-- Scroll without moving cursor relative to position in window. Preserves
+-- current value of the 'scroll' option.
+vim.keymap.set('n', '<C-j>', function()
+  return '1<C-d><cmd>set scroll=' .. vim.o.scroll .. '<CR>'
+end, { expr = true, desc = 'Scroll and move cursor down one line' })
+vim.keymap.set('n', '<C-k>', function()
+  return '1<C-u><cmd>set scroll=' .. vim.o.scroll .. '<CR>'
+end, { expr = true, desc = 'Scroll and move cursor up one line' })
 
--- TIP: Disable arrow keys in normal mode
--- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
--- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
--- vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
--- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
-
--- Keybinds to make split navigation easier.
---  Use CTRL+<hjkl> to switch between windows
---
---  See `:help wincmd` for a list of all window commands
-vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
-vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
-vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
-vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
-
--- NOTE: Some terminals have colliding keymaps or are not able to send distinct keycodes
--- vim.keymap.set("n", "<C-S-h>", "<C-w>H", { desc = "Move window to the left" })
--- vim.keymap.set("n", "<C-S-l>", "<C-w>L", { desc = "Move window to the right" })
--- vim.keymap.set("n", "<C-S-j>", "<C-w>J", { desc = "Move window to the lower" })
--- vim.keymap.set("n", "<C-S-k>", "<C-w>K", { desc = "Move window to the upper" })
+-- Toggle ColorColumn
+vim.keymap.set('n', '<leader>cc', function()
+  return '<cmd>set cc=' .. (vim.o.cc ~= '80' and '80' or '') .. '<cr>'
+end, { expr = true, desc = 'Toggle ColorColumn at 80' })
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -284,6 +266,23 @@ require('lazy').setup({
     },
   },
 
+  { -- Discord rich presence
+    'vyfor/cord.nvim',
+    build = ':Cord update',
+    opts = { -- See <https://github.com/vyfor/cord.nvim/wiki/Configuration/>
+      editor = {
+        client = 'vim',
+        tooltip = 'Cower before me, VS Code user >:3',
+      },
+      display = {
+        flavor = 'accent',
+      },
+      idle = {
+        details = 'S̶l̶a̶c̶k̶i̶n̶g̶ ̶o̶f̶f̶ Compiling!',
+      },
+    },
+  },
+
   -- NOTE: Plugins can also be configured to run Lua code when they are loaded.
   --
   -- This is often very useful to both group configuration, as well as handle
@@ -298,58 +297,58 @@ require('lazy').setup({
   -- Then, because we use the `opts` key (recommended), the configuration runs
   -- after the plugin has been loaded as `require(MODULE).setup(opts)`.
 
-  { -- Useful plugin to show you pending keybinds.
-    'folke/which-key.nvim',
-    event = 'VimEnter', -- Sets the loading event to 'VimEnter'
-    opts = {
-      -- delay between pressing a key and opening which-key (milliseconds)
-      -- this setting is independent of vim.o.timeoutlen
-      delay = 0,
-      icons = {
-        -- set icon mappings to true if you have a Nerd Font
-        mappings = vim.g.have_nerd_font,
-        -- If you are using a Nerd Font: set icons.keys to an empty table which will use the
-        -- default which-key.nvim defined Nerd Font icons, otherwise define a string table
-        keys = vim.g.have_nerd_font and {} or {
-          Up = '<Up> ',
-          Down = '<Down> ',
-          Left = '<Left> ',
-          Right = '<Right> ',
-          C = '<C-…> ',
-          M = '<M-…> ',
-          D = '<D-…> ',
-          S = '<S-…> ',
-          CR = '<CR> ',
-          Esc = '<Esc> ',
-          ScrollWheelDown = '<ScrollWheelDown> ',
-          ScrollWheelUp = '<ScrollWheelUp> ',
-          NL = '<NL> ',
-          BS = '<BS> ',
-          Space = '<Space> ',
-          Tab = '<Tab> ',
-          F1 = '<F1>',
-          F2 = '<F2>',
-          F3 = '<F3>',
-          F4 = '<F4>',
-          F5 = '<F5>',
-          F6 = '<F6>',
-          F7 = '<F7>',
-          F8 = '<F8>',
-          F9 = '<F9>',
-          F10 = '<F10>',
-          F11 = '<F11>',
-          F12 = '<F12>',
-        },
-      },
+  --{ -- Useful plugin to show you pending keybinds.
+  --  'folke/which-key.nvim',
+  --  event = 'VimEnter', -- Sets the loading event to 'VimEnter'
+  --  opts = {
+  --    -- delay between pressing a key and opening which-key (milliseconds)
+  --    -- this setting is independent of vim.o.timeoutlen
+  --    delay = 0,
+  --    icons = {
+  --      -- set icon mappings to true if you have a Nerd Font
+  --      mappings = vim.g.have_nerd_font,
+  --      -- If you are using a Nerd Font: set icons.keys to an empty table which will use the
+  --      -- default which-key.nvim defined Nerd Font icons, otherwise define a string table
+  --      keys = vim.g.have_nerd_font and {} or {
+  --        Up = '<Up> ',
+  --        Down = '<Down> ',
+  --        Left = '<Left> ',
+  --        Right = '<Right> ',
+  --        C = '<C-…> ',
+  --        M = '<M-…> ',
+  --        D = '<D-…> ',
+  --        S = '<S-…> ',
+  --        CR = '<CR> ',
+  --        Esc = '<Esc> ',
+  --        ScrollWheelDown = '<ScrollWheelDown> ',
+  --        ScrollWheelUp = '<ScrollWheelUp> ',
+  --        NL = '<NL> ',
+  --        BS = '<BS> ',
+  --        Space = '<Space> ',
+  --        Tab = '<Tab> ',
+  --        F1 = '<F1>',
+  --        F2 = '<F2>',
+  --        F3 = '<F3>',
+  --        F4 = '<F4>',
+  --        F5 = '<F5>',
+  --        F6 = '<F6>',
+  --        F7 = '<F7>',
+  --        F8 = '<F8>',
+  --        F9 = '<F9>',
+  --        F10 = '<F10>',
+  --        F11 = '<F11>',
+  --        F12 = '<F12>',
+  --      },
+  --    },
 
-      -- Document existing key chains
-      spec = {
-        { '<leader>s', group = '[S]earch' },
-        { '<leader>t', group = '[T]oggle' },
-        { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
-      },
-    },
-  },
+  --    -- Document existing key chains
+  --    spec = {
+  --      { '<leader>s', group = '[S]earch' },
+  --      { '<leader>t', group = '[T]oggle' },
+  --      { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
+  --    },
+  --  },
+  --},
 
   -- NOTE: Plugins can specify dependencies.
   --
@@ -590,29 +589,29 @@ require('lazy').setup({
           --    See `:help CursorHold` for information about when this is executed
           --
           -- When you move your cursor, the highlights will be cleared (the second autocommand).
-          local client = vim.lsp.get_client_by_id(event.data.client_id)
-          if client and client_supports_method(client, vim.lsp.protocol.Methods.textDocument_documentHighlight, event.buf) then
-            local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight', { clear = false })
-            vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
-              buffer = event.buf,
-              group = highlight_augroup,
-              callback = vim.lsp.buf.document_highlight,
-            })
+          --local client = vim.lsp.get_client_by_id(event.data.client_id)
+          --if client and client_supports_method(client, vim.lsp.protocol.Methods.textDocument_documentHighlight, event.buf) then
+          --  local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight', { clear = false })
+          --  vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
+          --    buffer = event.buf,
+          --    group = highlight_augroup,
+          --    callback = vim.lsp.buf.document_highlight,
+          --  })
 
-            vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
-              buffer = event.buf,
-              group = highlight_augroup,
-              callback = vim.lsp.buf.clear_references,
-            })
+          --  vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
+          --    buffer = event.buf,
+          --    group = highlight_augroup,
+          --    callback = vim.lsp.buf.clear_references,
+          --  })
 
-            vim.api.nvim_create_autocmd('LspDetach', {
-              group = vim.api.nvim_create_augroup('kickstart-lsp-detach', { clear = true }),
-              callback = function(event2)
-                vim.lsp.buf.clear_references()
-                vim.api.nvim_clear_autocmds { group = 'kickstart-lsp-highlight', buffer = event2.buf }
-              end,
-            })
-          end
+          --  vim.api.nvim_create_autocmd('LspDetach', {
+          --    group = vim.api.nvim_create_augroup('kickstart-lsp-detach', { clear = true }),
+          --    callback = function(event2)
+          --      vim.lsp.buf.clear_references()
+          --      vim.api.nvim_clear_autocmds { group = 'kickstart-lsp-highlight', buffer = event2.buf }
+          --    end,
+          --  })
+          --end
 
           -- The following code creates a keymap to toggle inlay hints in your
           -- code, if the language server you are using supports them
@@ -671,10 +670,10 @@ require('lazy').setup({
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
-        -- clangd = {},
+        clangd = {},
         -- gopls = {},
-        -- pyright = {},
-        -- rust_analyzer = {},
+        pyright = {},
+        rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
@@ -768,6 +767,7 @@ require('lazy').setup({
       end,
       formatters_by_ft = {
         lua = { 'stylua' },
+        rs = { 'rustfmt' },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
         --
@@ -881,63 +881,54 @@ require('lazy').setup({
     -- change the command in the config to whatever the name of that colorscheme is.
     --
     -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-    'folke/tokyonight.nvim',
+    'qtf0x/paramount.nvim',
     priority = 1000, -- Make sure to load this before all the other start plugins.
     config = function()
-      ---@diagnostic disable-next-line: missing-fields
-      require('tokyonight').setup {
-        styles = {
-          comments = { italic = false }, -- Disable italics in comments
-        },
-      }
-
       -- Load the colorscheme here.
-      -- Like many other themes, this one has different styles, and you could load
-      -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
+      vim.cmd.colorscheme 'paramount'
     end,
   },
 
   -- Highlight todo, notes, etc in comments
   { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
 
-  { -- Collection of various small independent plugins/modules
-    'echasnovski/mini.nvim',
-    config = function()
-      -- Better Around/Inside textobjects
-      --
-      -- Examples:
-      --  - va)  - [V]isually select [A]round [)]paren
-      --  - yinq - [Y]ank [I]nside [N]ext [Q]uote
-      --  - ci'  - [C]hange [I]nside [']quote
-      require('mini.ai').setup { n_lines = 500 }
+  --{ -- Collection of various small independent plugins/modules
+  --  'echasnovski/mini.nvim',
+  --  config = function()
+  --    -- Better Around/Inside textobjects
+  --    --
+  --    -- Examples:
+  --    --  - va)  - [V]isually select [A]round [)]paren
+  --    --  - yinq - [Y]ank [I]nside [N]ext [Q]uote
+  --    --  - ci'  - [C]hange [I]nside [']quote
+  --    require('mini.ai').setup { n_lines = 500 }
 
-      -- Add/delete/replace surroundings (brackets, quotes, etc.)
-      --
-      -- - saiw) - [S]urround [A]dd [I]nner [W]ord [)]Paren
-      -- - sd'   - [S]urround [D]elete [']quotes
-      -- - sr)'  - [S]urround [R]eplace [)] [']
-      require('mini.surround').setup()
+  --    -- Add/delete/replace surroundings (brackets, quotes, etc.)
+  --    --
+  --    -- - saiw) - [S]urround [A]dd [I]nner [W]ord [)]Paren
+  --    -- - sd'   - [S]urround [D]elete [']quotes
+  --    -- - sr)'  - [S]urround [R]eplace [)] [']
+  --    require('mini.surround').setup()
 
-      -- Simple and easy statusline.
-      --  You could remove this setup call if you don't like it,
-      --  and try some other statusline plugin
-      local statusline = require 'mini.statusline'
-      -- set use_icons to true if you have a Nerd Font
-      statusline.setup { use_icons = vim.g.have_nerd_font }
+  --    -- Simple and easy statusline.
+  --    --  You could remove this setup call if you don't like it,
+  --    --  and try some other statusline plugin
+  --    local statusline = require 'mini.statusline'
+  --    -- set use_icons to true if you have a Nerd Font
+  --    statusline.setup { use_icons = vim.g.have_nerd_font }
 
-      -- You can configure sections in the statusline by overriding their
-      -- default behavior. For example, here we set the section for
-      -- cursor location to LINE:COLUMN
-      ---@diagnostic disable-next-line: duplicate-set-field
-      statusline.section_location = function()
-        return '%2l:%-2v'
-      end
+  --    -- You can configure sections in the statusline by overriding their
+  --    -- default behavior. For example, here we set the section for
+  --    -- cursor location to LINE:COLUMN
+  --    ---@diagnostic disable-next-line: duplicate-set-field
+  --    statusline.section_location = function()
+  --      return '%2l:%-2v'
+  --    end
 
-      -- ... and there is more!
-      --  Check out: https://github.com/echasnovski/mini.nvim
-    end,
-  },
+  --    -- ... and there is more!
+  --    --  Check out: https://github.com/echasnovski/mini.nvim
+  --  end,
+  --},
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
